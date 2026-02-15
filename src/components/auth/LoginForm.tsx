@@ -3,34 +3,29 @@
 import { useState } from 'react';
 import { z } from 'zod';
 
-const registrationSchema = z.object({
+const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
-  username: z.string().min(3, 'Username must be at least 3 characters').max(30),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  fullName: z.string().min(1, 'Full name is required'),
+  password: z.string().min(1, 'Password is required'),
 });
 
-type RegistrationStatus = 'idle' | 'loading' | 'success' | 'error';
+type LoginStatus = 'idle' | 'loading' | 'success' | 'error';
 
-interface RegistrationFormProps {
-  onSuccess?: () => void;
+interface LoginFormProps {
+  onSuccess?: (data: { accessToken: string; user: { id: string; email: string; username: string } }) => void;
 }
 
-export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
+export function LoginForm({ onSuccess }: LoginFormProps) {
   const [formData, setFormData] = useState({
     email: '',
-    username: '',
     password: '',
-    fullName: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [status, setStatus] = useState<RegistrationStatus>('idle');
+  const [status, setStatus] = useState<LoginStatus>('idle');
   const [message, setMessage] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -42,8 +37,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
     setErrors({});
     setMessage('');
 
-    // Validate form data
-    const result = registrationSchema.safeParse(formData);
+    const result = loginSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
       result.error.issues.forEach((err) => {
@@ -57,7 +51,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -66,31 +60,21 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.error || 'Registration failed');
+        setMessage(data.error || 'Login failed');
         setStatus('error');
         return;
       }
 
-      setMessage(data.message);
+      // Store access token
+      localStorage.setItem('accessToken', data.accessToken);
+      
       setStatus('success');
-      onSuccess?.();
+      onSuccess?.(data);
     } catch {
       setMessage('An error occurred. Please try again.');
       setStatus('error');
     }
   };
-
-  if (status === 'success') {
-    return (
-      <div className="p-6 bg-green-50 border border-green-200 rounded-lg text-center">
-        <h2 className="text-xl font-semibold text-green-800 mb-2">Registration Successful!</h2>
-        <p className="text-green-700">{message}</p>
-        <p className="text-sm text-green-600 mt-2">
-          Please check your email to verify your account before logging in.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -99,24 +83,6 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
           {message}
         </div>
       )}
-
-      <div>
-        <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-          Full Name
-        </label>
-        <input
-          id="fullName"
-          name="fullName"
-          type="text"
-          value={formData.fullName}
-          onChange={handleChange}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent ${
-            errors.fullName ? 'border-red-500' : 'border-gray-300'
-          }`}
-          placeholder="Max Verstappen"
-        />
-        {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
-      </div>
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -134,24 +100,6 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
           placeholder="max@example.com"
         />
         {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-      </div>
-
-      <div>
-        <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-          Username
-        </label>
-        <input
-          id="username"
-          name="username"
-          type="text"
-          value={formData.username}
-          onChange={handleChange}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent ${
-            errors.username ? 'border-red-500' : 'border-gray-300'
-          }`}
-          placeholder="max_verstappen"
-        />
-        {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
       </div>
 
       <div>
@@ -177,7 +125,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
         disabled={status === 'loading'}
         className="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {status === 'loading' ? 'Creating Account...' : 'Create Account'}
+        {status === 'loading' ? 'Signing In...' : 'Sign In'}
       </button>
     </form>
   );
