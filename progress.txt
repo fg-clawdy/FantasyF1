@@ -1,0 +1,31 @@
+# Progress Log — FantasyF1
+
+## Project Status
+- **Project:** FantasyF1 - Production-Grade Fantasy F1 Application
+- **Tech Stack:** Next.js 14 (App Router), TypeScript, Tailwind CSS
+- **Database:** TBD (Neon/PlanetScale/Supabase)
+- **Auth:** Custom JWT with Resend for email
+- **Started:** 2026-02-15
+
+## Codebase Patterns
+- Next.js 14 App Router with TypeScript
+- Tailwind CSS for styling
+- API routes in /app/api/[feature]/route.ts
+- Components in /components/[feature]/
+- Server actions where appropriate
+- Zod for validation
+- JWT for authentication
+
+## Implementation Log
+
+### [2026-02-15] - Project Setup
+- Initialized Next.js project with TypeScript and Tailwind
+- Restored PRD files (25 user stories)
+- Created initial commit
+
+### Next Tasks (Priority Order)
+1. US-001: Email Validation Registration
+2. US-002: User Login with JWT Tokens
+3. US-003: Password Reset Flow
+4. US-004: User Profile Management
+... (see prd.json for full list)
