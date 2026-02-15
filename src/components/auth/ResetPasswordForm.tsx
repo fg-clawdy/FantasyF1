@@ -22,7 +22,7 @@ export function ResetPasswordForm() {
     newPassword: '',
     confirmPassword: '',
   });
-  const [errors, setErrors] = useState<Record<string, string>>(() => 
+  const [errors, setErrors] = useState<Record<string, string>>(
     !token ? { token: 'Reset token is required' } : {}
   );
   const [status, setStatus] = useState<Status>('idle');
